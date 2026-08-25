@@ -1,0 +1,19 @@
+/* Small CSS Asset */
+:root {
+  --primary-color: #0066cc;
+  --secondary-color: #f4f4f9;
+  --font-base: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+}
+
+body {
+  margin: 0;
+  padding: 0;
+  font-family: var(--font-base);
+  background-color: var(--secondary-color);
+}
+
+.header {
+  background-color: var(--primary-color);
+  color: white;
+  padding: 1rem;
+}

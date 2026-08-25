@@ -1,0 +1,13 @@
+FROM docker.io/library/caddy:builder-alpine AS builder
+
+RUN xcaddy build \
+    --with github.com/darkweak/souin/plugins/caddy \
+    --with github.com/darkweak/storages/otter/caddy
+
+FROM docker.io/library/caddy:alpine
+
+COPY --from=builder /usr/bin/caddy /usr/bin/caddy
+
+EXPOSE 80
+
+CMD ["caddy", "run", "--config", "/etc/caddy/Caddyfile", "--adapter", "caddyfile"]

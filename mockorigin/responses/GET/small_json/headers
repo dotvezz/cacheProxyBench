@@ -1,0 +1,4 @@
+Content-Type: application/json
+Cache-Control: public, max-age=3600
+ETag: "small-json-v1"
+Content-Length: 29

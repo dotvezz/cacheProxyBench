@@ -1,0 +1,9 @@
+(function() {
+    'use strict';
+    console.log('Mock Origin Small JS Loaded');
+    window.MockBench = window.MockBench || {};
+    window.MockBench.version = '1.0.0';
+    window.MockBench.init = function() {
+        return { status: 'initialized', timestamp: Date.now() };
+    };
+})();

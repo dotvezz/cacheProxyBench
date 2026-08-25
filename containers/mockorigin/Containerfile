@@ -1,0 +1,17 @@
+FROM docker.io/library/golang:alpine AS builder
+
+WORKDIR /app
+
+COPY . .
+
+RUN CGO_ENABLED=0 GOOS=linux go build -o /mockorigin ./mockorigin
+
+FROM docker.io/library/alpine:latest
+
+RUN apk --no-cache add ca-certificates
+
+COPY --from=builder /mockorigin /mockorigin
+
+EXPOSE 80
+
+ENTRYPOINT ["/mockorigin"]

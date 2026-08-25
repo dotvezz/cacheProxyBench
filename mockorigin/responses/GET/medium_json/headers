@@ -1,0 +1,4 @@
+Content-Type: application/json
+Cache-Control: public, max-age=3600
+ETag: "medium-json-v1"
+Content-Length: 20807

@@ -1,0 +1,12 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <title>Small HTML Benchmark Page</title>
+    <style>body { font-family: sans-serif; margin: 2em; }</style>
+</head>
+<body>
+    <h1>Cache Proxy Benchmarking</h1>
+    <p>This is a small realistic HTML response used for performance testing.</p>
+</body>
+</html>

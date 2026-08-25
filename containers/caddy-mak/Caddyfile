@@ -1,0 +1,14 @@
+{
+	order cache before rewrite
+	cache {
+		timing {
+			ttl 5m
+		}
+		storage in_memory 5GB
+	}
+}
+
+:80 {
+	cache
+	reverse_proxy mockorigin:80
+}

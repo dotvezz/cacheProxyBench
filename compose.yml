@@ -1,0 +1,80 @@
+name: cache-proxy-bench
+
+services:
+  alpine:
+    image: docker.io/library/alpine:latest
+
+  mockorigin:
+    build:
+      context: .
+      dockerfile: containers/mockorigin/Containerfile
+    ports:
+      - "8000:80"
+
+  varnish:
+    image: docker.io/library/varnish:latest
+    command: [ "varnishd", "-F", "-f", "/etc/varnish/default.vcl", "-a", ":8080", "-s", "malloc,8g", "-t", "300" ]
+    ports:
+      - "8001:8080"
+    volumes:
+      - ./containers/varnish/default.vcl:/etc/varnish/default.vcl:ro
+    ulimits:
+      memlock:
+        soft: -1
+        hard: -1
+    depends_on:
+      - mockorigin
+
+  nginx:
+    image: docker.io/library/nginx:alpine
+    ports:
+      - "8002:80"
+    volumes:
+      - ./containers/nginx/nginx.conf:/etc/nginx/conf.d/default.conf:ro
+    tmpfs:
+      - /var/cache/nginx:size=8g
+    depends_on:
+      - mockorigin
+
+  squid:
+    image: docker.io/ubuntu/squid:latest
+    command: [ "squid", "--foreground", "-f", "/etc/squid/squid.conf" ]
+    ports:
+      - "8003:80"
+    shm_size: 8g
+    volumes:
+      - ./containers/squid/squid.conf:/etc/squid/squid.conf:ro
+    tmpfs:
+      - /var/spool/squid:rw,mode=1777,size=8g
+    depends_on:
+      - mockorigin
+
+  caddy-souin:
+    build:
+      context: ./containers/caddy-souin
+      dockerfile: Containerfile
+    ports:
+      - "8004:80"
+    volumes:
+      - ./containers/caddy-souin/Caddyfile:/etc/caddy/Caddyfile:ro
+    depends_on:
+      - mockorigin
+
+  caddy-mak:
+    build:
+      context: ./containers/caddy-mak
+      dockerfile: Containerfile
+    ports:
+      - "8005:80"
+    volumes:
+      - ./containers/caddy-mak/Caddyfile:/etc/caddy/Caddyfile:ro
+    depends_on:
+      - mockorigin
+
+  k6:
+    image: docker.io/grafana/k6:latest
+    volumes:
+      - ./benchmarks:/benchmarks:rw
+    depends_on:
+      - mockorigin
+

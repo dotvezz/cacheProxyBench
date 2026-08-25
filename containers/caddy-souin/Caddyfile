@@ -1,0 +1,11 @@
+{
+    cache {
+        otter
+        ttl 120s
+    }
+}
+
+:80 {
+	cache
+	reverse_proxy mockorigin:80
+}

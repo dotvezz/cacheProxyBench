@@ -1,0 +1,12 @@
+FROM docker.io/library/caddy:builder-alpine AS builder
+
+RUN xcaddy build \
+    --with github.com/dotvezz/mak-cache/plugins/caddy=github.com/dotvezz/mak-cache/plugins/caddy@v0.1.2
+
+FROM docker.io/library/caddy:alpine
+
+COPY --from=builder /usr/bin/caddy /usr/bin/caddy
+
+EXPOSE 80
+
+CMD ["caddy", "run", "--config", "/etc/caddy/Caddyfile", "--adapter", "caddyfile"]
