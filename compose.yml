@@ -12,10 +12,12 @@ services:
       - "8000:80"
 
   varnish:
-    image: docker.io/library/varnish:latest
-    command: [ "varnishd", "-F", "-f", "/etc/varnish/default.vcl", "-a", ":8080", "-s", "malloc,8g", "-t", "300" ]
+    image: docker.io/library/varnish:9.0
+    user: 0
+    environment:
+      - VARNISH_SIZE=8G
     ports:
-      - "8001:8080"
+      - "8001:80"
     volumes:
       - ./containers/varnish/default.vcl:/etc/varnish/default.vcl:ro
     ulimits:

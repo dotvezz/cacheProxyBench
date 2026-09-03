@@ -2,7 +2,7 @@ import http from 'k6/http';
 import {check} from 'k6';
 import exec from 'k6/execution';
 import {Options} from 'k6/options';
-import {Trend, Counter} from 'k6/metrics';
+import {Counter, Trend} from 'k6/metrics';
 
 // Rolling window metrics - Latency (0.1s, 0.5s, 1s)
 const rollingAvgLatency01s = new Trend('rolling_avg_latency_0_1s', true);
@@ -77,12 +77,12 @@ function parseDurationSec(durationStr: string): number {
 
 export const STAGES = [
     {duration: '1s', target: 10},   // Warm-up ramp
-    {duration: '10s', target: 50},   // Medium load
-    {duration: '5s', target: 200},  // High load spike
-    {duration: '5s', target: 50},   // Step down
+    {duration: '2s', target: 50},  // Medium load
+    {duration: '2s', target: 200},  // High load spike
+    {duration: '2s', target: 50},   // Step down
     {duration: '2s', target: 100},  // Quickly ramp up
-    {duration: '2s', target: 350},  // Continue
-    {duration: '2s', target: 450},  // Super peak
+    {duration: '2s', target: 450},  // Continue
+    {duration: '2s', target: 2000}, // Super peak
     {duration: '2s', target: 50},   // Step down
     {duration: '2s', target: 0},    // Cool down
 ];
@@ -192,7 +192,7 @@ export default function () {
     const url = `${BASE_URL}/${path}?k=${keyId}`;
 
     const res = http.get(url, {
-        tags: { name: `/${path}` },
+        tags: {name: `/${path}`},
         responseCallback: http.expectedStatuses(200, 404),
     });
 

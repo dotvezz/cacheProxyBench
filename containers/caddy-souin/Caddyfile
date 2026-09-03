@@ -1,6 +1,10 @@
 {
     cache {
-        otter
+        otter {
+            configuration {
+                size 100000
+            }
+        }
         ttl 120s
     }
 }
