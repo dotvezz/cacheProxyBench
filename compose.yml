@@ -15,7 +15,7 @@ services:
     image: docker.io/library/varnish:9.0
     user: 0
     environment:
-      - VARNISH_SIZE=8G
+      VARNISH_SIZE: 8G
     ports:
       - "8001:80"
     volumes:
@@ -79,4 +79,5 @@ services:
       - ./benchmarks:/benchmarks:rw
     depends_on:
       - mockorigin
-
+    environment:
+      PORT: 80
