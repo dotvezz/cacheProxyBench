@@ -10,6 +10,7 @@ import (
 	"path"
 	"strconv"
 	"strings"
+	"sync/atomic"
 )
 
 //go:embed responses
@@ -22,6 +23,7 @@ type mockResponse struct {
 }
 
 var responses = make(map[string]*mockResponse)
+var requestCount uint64
 
 func main() {
 	if err := loadResponses(); err != nil {
@@ -34,11 +36,29 @@ func main() {
 	}
 	addr := ":" + port
 
+	http.HandleFunc("/_requests", handleRequestsEndpoint)
 	http.HandleFunc("/", handleRequest)
 
 	log.Printf("Mock origin server listening on %s (%d endpoints loaded)...", addr, len(responses))
 	if err := http.ListenAndServe(addr, nil); err != nil {
 		log.Fatalf("Server failed to start: %v", err)
+	}
+}
+
+func handleRequestsEndpoint(w http.ResponseWriter, r *http.Request) {
+	w.Header().Set("Cache-Control", "no-store, no-cache, must-revalidate")
+	w.Header().Set("Content-Type", "application/json")
+
+	switch r.Method {
+	case http.MethodGet, http.MethodHead:
+		count := atomic.LoadUint64(&requestCount)
+		fmt.Fprintf(w, "{\"count\":%d}\n", count)
+	case http.MethodDelete:
+		atomic.StoreUint64(&requestCount, 0)
+		w.WriteHeader(http.StatusOK)
+		fmt.Fprintln(w, `{"count":0,"message":"counter reset"}`)
+	default:
+		http.Error(w, "Method not allowed", http.StatusMethodNotAllowed)
 	}
 }
 
@@ -115,6 +135,13 @@ func loadResponses() error {
 
 func handleRequest(w http.ResponseWriter, r *http.Request) {
 	cleanPath := path.Clean(r.URL.Path)
+	if cleanPath == "/_requests" {
+		handleRequestsEndpoint(w, r)
+		return
+	}
+
+	atomic.AddUint64(&requestCount, 1)
+
 	lookupMethod := r.Method
 	if lookupMethod == "HEAD" {
 		lookupMethod = "GET"
