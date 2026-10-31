@@ -1,13 +1,19 @@
 package benchmark
 
 import (
+	"errors"
 	"io"
 	"net/http"
 	"net/http/httptrace"
+	"strings"
 	"sync"
 	"time"
 
 	"github.com/dotvezz/cacheProxyBench/requests"
+)
+
+var (
+	ErrNilResponse = errors.New("nil response")
 )
 
 func Run(host string, p Profile, timeline *Timeline) (err error) {
@@ -77,14 +83,47 @@ func doRequest(wg *sync.WaitGroup, uri string, startTime time.Time, client *http
 		req = req.WithContext(httptrace.WithClientTrace(req.Context(), trace))
 		resp, err := client.Do(req)
 		if err != nil {
-			// TODO: handle this case better
-			panic(err)
+			result.Error = err
+		} else if resp == nil {
+			result.Error = ErrNilResponse
 		}
 		if _, err := io.Copy(io.Discard, resp.Body); err != nil {
 			panic(err)
 		}
 		result.Completed = time.Since(startTime)
+		result.Hit = isHit(resp)
+		result.Collapsed = isCollapsed(resp)
 
 		timeline.Append(result)
 	}()
+}
+
+func isHit(resp *http.Response) bool {
+	cs := resp.Header.Get("Cache-Status")
+	if cs != "" {
+		csParts := strings.Split(cs, ";")
+		for i := range csParts {
+			if strings.TrimSpace(csParts[i]) == "hit" {
+				return true
+			}
+		}
+	}
+
+	// TODO: Other response headers as needed
+	return false
+}
+
+func isCollapsed(resp *http.Response) bool {
+	cs := resp.Header.Get("Cache-Status")
+	if cs != "" {
+		csParts := strings.Split(cs, ";")
+		for i := range csParts {
+			if strings.TrimSpace(csParts[i]) == "collapsed" {
+				return true
+			}
+		}
+	}
+
+	// TODO: Other response headers as needed
+	return false
 }

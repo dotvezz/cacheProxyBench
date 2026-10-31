@@ -76,7 +76,6 @@ type Result struct {
 	Sent      time.Duration
 	FirstByte time.Duration
 	Completed time.Duration
-	Track     int
 	Hit       bool
 	Collapsed bool
 	Error     error
