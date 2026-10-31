@@ -66,11 +66,12 @@ func runTrack(wg *sync.WaitGroup, host string, track Track, startTime time.Time,
 
 func doRequest(wg *sync.WaitGroup, uri string, startTime time.Time, client *http.Client, timeline *Timeline) {
 	func() {
+		req := requests.Get(http.MethodGet, uri)
 		defer func() {
 			wg.Done()
+			requests.Put(req)
 		}()
 		result := Result{}
-		req := requests.Get(http.MethodGet, uri)
 
 		trace := &httptrace.ClientTrace{
 			WroteRequest: func(info httptrace.WroteRequestInfo) {

@@ -5,34 +5,14 @@ import (
 	"os"
 
 	tea "charm.land/bubbletea/v2"
+	"github.com/dotvezz/cacheProxyBench/ui"
 )
-
-var (
-	_ tea.Model = model{}
-)
-
-type model struct {
-}
-
-func (m model) Init() tea.Cmd {
-	return nil
-}
-
-func (m model) Update(msg tea.Msg) (tea.Model, tea.Cmd) {
-	return m, nil
-}
-
-func (m model) View() tea.View {
-	//TODO implement me
-	panic("implement me")
-}
-
-func newModel() model {
-	return model{}
-}
 
 func main() {
-	if _, err := tea.NewProgram(newModel()).Run(); err != nil {
+	if _, err := tea.NewProgram(ui.NewMenu([]ui.MenuOption{
+		{Key: "Option 1", Value: nil},
+		{Key: "Option 2", Value: nil},
+	})).Run(); err != nil {
 		fmt.Println("Error running program:", err)
 		os.Exit(1)
 	}
