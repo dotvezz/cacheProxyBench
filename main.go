@@ -5,14 +5,22 @@ import (
 	"os"
 
 	tea "charm.land/bubbletea/v2"
-	"github.com/dotvezz/cacheProxyBench/ui"
+	"github.com/dotvezz/cacheProxyBench/ui/menu"
 )
 
 func main() {
-	if _, err := tea.NewProgram(ui.NewMenu([]ui.MenuOption{
-		{Key: "Option 1", Value: nil},
-		{Key: "Option 2", Value: nil},
-	})).Run(); err != nil {
+
+	menuItems := []menu.Item{
+		{Name: "(R)un", HotKey: 'r', Value: func(m tea.Model) tea.Model { return menu.New(menu.WithParent(m)) }},
+		{Name: "", Value: nil},
+	}
+
+	m := menu.New(
+		menu.WithItems(menuItems),
+		menu.WithTitle("Select an option"),
+	)
+
+	if _, err := tea.NewProgram(m).Run(); err != nil {
 		fmt.Println("Error running program:", err)
 		os.Exit(1)
 	}

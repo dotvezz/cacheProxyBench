@@ -32,9 +32,10 @@ func (t *Track) NextPath() string {
 }
 
 type Profile struct {
-	Name       string
-	AllowError bool    `yaml:"allow_error,omitempty"`
-	Tracks     []Track `yaml:"tracks"`
+	Name        string  `yaml:"name"`
+	Description string  `yaml:"description,omitempty"`
+	AllowError  bool    `yaml:"allow_error,omitempty"`
+	Tracks      []Track `yaml:"tracks"`
 }
 
 func NewTimeline(length int) *Timeline {
