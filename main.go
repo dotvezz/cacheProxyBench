@@ -5,13 +5,24 @@ import (
 	"os"
 
 	tea "charm.land/bubbletea/v2"
+	"github.com/dotvezz/cacheProxyBench/profiles"
 	"github.com/dotvezz/cacheProxyBench/ui/menu"
 )
 
-func main() {
+func profilesMenu(m tea.Model) tea.Model {
+	ps := profiles.GetAll()
 
+	items := make([]menu.Item, len(ps))
+	for i, p := range ps {
+		items[i] = menu.Item{Name: p.Name, Value: nil}
+	}
+
+	return menu.New(menu.WithParent(m), menu.WithTitle("Select a profile"), menu.WithItems(items))
+}
+
+func main() {
 	menuItems := []menu.Item{
-		{Name: "(R)un", HotKey: 'r', Value: func(m tea.Model) tea.Model { return menu.New(menu.WithParent(m)) }},
+		{Name: "(R)un", HotKey: 'r', Value: profilesMenu},
 		{Name: "", Value: nil},
 	}
 

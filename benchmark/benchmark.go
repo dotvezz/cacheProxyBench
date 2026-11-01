@@ -9,6 +9,7 @@ import (
 	"sync"
 	"time"
 
+	"github.com/dotvezz/cacheProxyBench/profiles"
 	"github.com/dotvezz/cacheProxyBench/requests"
 )
 
@@ -16,8 +17,8 @@ var (
 	ErrNilResponse = errors.New("nil response")
 )
 
-func Run(host string, p Profile, timeline *Timeline) (err error) {
-	requestCount := PlannedRequestCount(p.Tracks...)
+func Run(host string, p profiles.Profile, timeline *Timeline) (err error) {
+	requestCount := p.PlannedRequestCount()
 	startTime := time.Now()
 	client := requests.NewClient()
 
@@ -35,16 +36,8 @@ func Run(host string, p Profile, timeline *Timeline) (err error) {
 	return err
 }
 
-func PlannedRequestCount(tracks ...Track) (count int) {
-	for _, t := range tracks {
-		count += int((t.To - t.From).Seconds() * float64(t.RPS))
-	}
-
-	return count
-}
-
-func runTrack(wg *sync.WaitGroup, host string, track Track, startTime time.Time, client *http.Client, timeline *Timeline) {
-	stopAfterN := PlannedRequestCount(track)
+func runTrack(wg *sync.WaitGroup, host string, track profiles.Track, startTime time.Time, client *http.Client, timeline *Timeline) {
+	stopAfterN := track.PlannedRequestCount()
 	countStarted := 0
 	ticker := time.NewTicker(time.Second / time.Duration(track.RPS))
 	defer ticker.Stop()

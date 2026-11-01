@@ -37,7 +37,7 @@ func TestRun(t *testing.T) {
 				},
 			},
 		},
-		{
+		{w
 			name: "375_000 small requests at 75_000 requests per second",
 			args: args{
 				host: "http://127.0.0.1:8005",

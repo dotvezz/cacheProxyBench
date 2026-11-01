@@ -2,8 +2,8 @@ name: Simple Test - Just Two Requests
 description: Just two requests
 tracks:
   - name: two requests
-    from: 0
-    to: 1
+    from: 0s
+    to: 1s
     rps: 2
     paths:
       - /small_css
