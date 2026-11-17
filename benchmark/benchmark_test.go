@@ -4,12 +4,14 @@ import (
 	"fmt"
 	"testing"
 	"time"
+
+	"github.com/dotvezz/cacheProxyBench/profiles"
 )
 
 func TestRun(t *testing.T) {
 	type args struct {
 		host string
-		p    Profile
+		p    profiles.Profile
 	}
 	tests := []struct {
 		name         string
@@ -21,9 +23,9 @@ func TestRun(t *testing.T) {
 			name: "simple two requests",
 			args: args{
 				host: "http://127.0.0.1:8005",
-				p: Profile{
+				p: profiles.Profile{
 					Name: "just two requests",
-					Tracks: []Track{
+					Tracks: []profiles.Track{
 						{
 							Name: "two requests",
 							From: 0,
@@ -37,12 +39,12 @@ func TestRun(t *testing.T) {
 				},
 			},
 		},
-		{w
+		{
 			name: "375_000 small requests at 75_000 requests per second",
 			args: args{
 				host: "http://127.0.0.1:8005",
-				p: Profile{
-					Tracks: []Track{
+				p: profiles.Profile{
+					Tracks: []profiles.Track{
 						{
 							From: 0,
 							To:   time.Second * 5,
@@ -58,12 +60,8 @@ func TestRun(t *testing.T) {
 	}
 	for _, tt := range tests {
 		t.Run(tt.name, func(t *testing.T) {
-			timeline := NewTimeline(PlannedRequestCount(tt.args.p.Tracks...))
-			err := Run(tt.args.host, tt.args.p, timeline)
-			if (err != nil) != tt.wantErr {
-				t.Errorf("Run() error = %v, wantErr %v", err, tt.wantErr)
-				return
-			}
+			timeline := NewTimeline(tt.args.p.PlannedRequestCount())
+			Run(tt.args.host, tt.args.p, timeline).Wait()
 			fmt.Println(timeline.Len())
 		})
 	}

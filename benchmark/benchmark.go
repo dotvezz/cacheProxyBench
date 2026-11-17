@@ -17,26 +17,7 @@ var (
 	ErrNilResponse = errors.New("nil response")
 )
 
-func Run(host string, p profiles.Profile, timeline *Timeline) (err error) {
-	requestCount := p.PlannedRequestCount()
-	startTime := time.Now()
-	client := requests.NewClient()
-
-	wg := &sync.WaitGroup{}
-	wg.Add(requestCount)
-
-	for _, t := range p.Tracks {
-		_ = time.AfterFunc(t.From, func() {
-			runTrack(wg, host, t, startTime, client, timeline)
-		})
-	}
-
-	wg.Wait()
-
-	return err
-}
-
-func runTrack(wg *sync.WaitGroup, host string, track profiles.Track, startTime time.Time, client *http.Client, timeline *Timeline) {
+func runTrack(wg *sync.WaitGroup, host string, track profiles.Track, startTime time.Time, client *http.Client, timeline *Timeline, cancelCh <-chan struct{}) {
 	stopAfterN := track.PlannedRequestCount()
 	countStarted := 0
 	ticker := time.NewTicker(time.Second / time.Duration(track.RPS))
@@ -52,7 +33,8 @@ func runTrack(wg *sync.WaitGroup, host string, track profiles.Track, startTime t
 			go doRequest(wg, uri, startTime, client, timeline)
 		case <-time.After(track.To - track.From):
 			break
-			// TODO: Cancel
+		case <-cancelCh:
+			return
 		}
 	}
 }
@@ -76,17 +58,22 @@ func doRequest(wg *sync.WaitGroup, uri string, startTime time.Time, client *http
 		}
 		req = req.WithContext(httptrace.WithClientTrace(req.Context(), trace))
 		resp, err := client.Do(req)
+
 		if err != nil {
 			result.Error = err
 		} else if resp == nil {
 			result.Error = ErrNilResponse
 		}
-		if _, err := io.Copy(io.Discard, resp.Body); err != nil {
-			panic(err)
-		}
+
 		result.Completed = time.Since(startTime)
-		result.Hit = isHit(resp)
-		result.Collapsed = isCollapsed(resp)
+		if resp != nil {
+			if _, err = io.Copy(io.Discard, resp.Body); err != nil {
+				panic(err)
+			}
+
+			result.Hit = isHit(resp)
+			result.Collapsed = isCollapsed(resp)
+		}
 
 		timeline.Append(result)
 	}()

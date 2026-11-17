@@ -5,6 +5,8 @@ import (
 	"slices"
 	"sync"
 	"testing"
+
+	"github.com/dotvezz/cacheProxyBench/profiles"
 )
 
 func TestTrack_NextPath(t1 *testing.T) {
@@ -41,7 +43,7 @@ func TestTrack_NextPath(t1 *testing.T) {
 	}
 	for _, tt := range tests {
 		t1.Run(tt.name, func(t1 *testing.T) {
-			t := &Track{
+			t := &profiles.Track{
 				Paths: tt.paths,
 			}
 
