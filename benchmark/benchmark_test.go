@@ -10,8 +10,7 @@ import (
 
 func TestRun(t *testing.T) {
 	type args struct {
-		host string
-		p    profiles.Profile
+		p profiles.Profile
 	}
 	tests := []struct {
 		name         string
@@ -22,7 +21,6 @@ func TestRun(t *testing.T) {
 		{
 			name: "simple two requests",
 			args: args{
-				host: "http://127.0.0.1:8005",
 				p: profiles.Profile{
 					Name: "just two requests",
 					Tracks: []profiles.Track{
@@ -42,7 +40,6 @@ func TestRun(t *testing.T) {
 		{
 			name: "375_000 small requests at 75_000 requests per second",
 			args: args{
-				host: "http://127.0.0.1:8005",
 				p: profiles.Profile{
 					Tracks: []profiles.Track{
 						{
@@ -61,7 +58,7 @@ func TestRun(t *testing.T) {
 	for _, tt := range tests {
 		t.Run(tt.name, func(t *testing.T) {
 			timeline := NewTimeline(tt.args.p.PlannedRequestCount())
-			Run(tt.args.host, tt.args.p, timeline).Wait()
+			Run(tt.args.p, timeline).Wait()
 			fmt.Println(timeline.Len())
 		})
 	}

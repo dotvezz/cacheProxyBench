@@ -2,6 +2,7 @@ package benchmark
 
 import (
 	"errors"
+	"flag"
 	"io"
 	"net/http"
 	"net/http/httptrace"
@@ -15,9 +16,11 @@ import (
 
 var (
 	ErrNilResponse = errors.New("nil response")
+
+	host = flag.String("host", "http://127.0.0.1:8080", "host:port")
 )
 
-func runTrack(wg *sync.WaitGroup, host string, track profiles.Track, startTime time.Time, client *http.Client, timeline *Timeline, cancelCh <-chan struct{}) {
+func runTrack(wg *sync.WaitGroup, track profiles.Track, startTime time.Time, client *http.Client, timeline *Timeline, cancelCh <-chan struct{}) {
 	stopAfterN := track.PlannedRequestCount()
 	countStarted := 0
 	ticker := time.NewTicker(time.Second / time.Duration(track.RPS))
@@ -29,7 +32,7 @@ func runTrack(wg *sync.WaitGroup, host string, track profiles.Track, startTime t
 				break
 			}
 			countStarted++
-			uri := host + track.NextPath()
+			uri := *host + track.NextPath()
 			go doRequest(wg, uri, startTime, client, timeline)
 		case <-time.After(track.To - track.From):
 			break

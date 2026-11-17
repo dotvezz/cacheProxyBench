@@ -1,10 +1,12 @@
 package benchmark
 
 import (
+	"errors"
 	"reflect"
 	"slices"
 	"sync"
 	"testing"
+	"time"
 
 	"github.com/dotvezz/cacheProxyBench/profiles"
 )
@@ -105,5 +107,40 @@ func TestTimeline_Results(t1 *testing.T) {
 				t1.Errorf("Results() = %v, want %v", got, tt.want)
 			}
 		})
+	}
+}
+
+func TestTimeline_Aggregations(t1 *testing.T) {
+	var nilTimeline *Timeline
+	if nilTimeline.Hits() != 0 || nilTimeline.Collapsed() != 0 || nilTimeline.Errors() != 0 ||
+		nilTimeline.AvgFirstByte() != 0 || nilTimeline.AvgCompleted() != 0 {
+		t1.Fatalf("expected all aggregations on nil Timeline to be 0")
+	}
+
+	empty := NewTimeline(2)
+	if empty.Hits() != 0 || empty.Collapsed() != 0 || empty.Errors() != 0 ||
+		empty.AvgFirstByte() != 0 || empty.AvgCompleted() != 0 {
+		t1.Fatalf("expected all aggregations on empty Timeline to be 0")
+	}
+
+	tl := NewTimeline(4)
+	tl.Append(Result{Hit: true, FirstByte: 10 * time.Millisecond, Completed: 20 * time.Millisecond})
+	tl.Append(Result{Hit: true, Collapsed: true, FirstByte: 20 * time.Millisecond, Completed: 40 * time.Millisecond})
+	tl.Append(Result{Error: errors.New("boom"), FirstByte: 30 * time.Millisecond, Completed: 60 * time.Millisecond})
+
+	if got := tl.Hits(); got != 2 {
+		t1.Errorf("Hits() = %d, want 2", got)
+	}
+	if got := tl.Collapsed(); got != 1 {
+		t1.Errorf("Collapsed() = %d, want 1", got)
+	}
+	if got := tl.Errors(); got != 1 {
+		t1.Errorf("Errors() = %d, want 1", got)
+	}
+	if got := tl.AvgFirstByte(); got != 20*time.Millisecond {
+		t1.Errorf("AvgFirstByte() = %v, want 20ms", got)
+	}
+	if got := tl.AvgCompleted(); got != 40*time.Millisecond {
+		t1.Errorf("AvgCompleted() = %v, want 40ms", got)
 	}
 }

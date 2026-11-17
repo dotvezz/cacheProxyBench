@@ -34,7 +34,7 @@ func (j *Job) Done() bool {
 	}
 }
 
-func Run(host string, p profiles.Profile, timeline *Timeline) *Job {
+func Run(p profiles.Profile, timeline *Timeline) *Job {
 	job := &Job{
 		cancelCh: make(chan struct{}),
 		doneCh:   make(chan struct{}),
@@ -49,7 +49,7 @@ func Run(host string, p profiles.Profile, timeline *Timeline) *Job {
 
 	for _, t := range p.Tracks {
 		_ = time.AfterFunc(t.From, func() {
-			runTrack(wg, host, t, startTime, client, timeline, job.cancelCh)
+			runTrack(wg, t, startTime, client, timeline, job.cancelCh)
 		})
 	}
 

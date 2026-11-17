@@ -9,7 +9,7 @@ up\:%:
 #	make down:$*
 #	make down:mockorigin 2> /dev/null
 
-#benchmark\:%: up\:mockorigin up\:%
-#	sudo docker compose run --rm -e TARGET_HOST=$* k6 run /benchmarks/benchmark.ts
-#	make down:$*
-#	make down:mockorigin 2> /dev/null
+benchmark\:%: up\:mockorigin up\:%
+	go run ./
+	make down:$*
+	make down:mockorigin 2> /dev/null

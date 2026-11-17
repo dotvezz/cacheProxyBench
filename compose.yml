@@ -7,7 +7,7 @@ services:
   mockorigin:
     build:
       context: .
-      dockerfile: ./_containers/mockorigin/Containerfile
+      dockerfile: ./containers/mockorigin/Containerfile
     ports:
       - "8000:80"
 
@@ -17,9 +17,9 @@ services:
     environment:
       VARNISH_SIZE: 8G
     ports:
-      - "8001:80"
+      - "8080:80"
     volumes:
-      - ./_containers/varnish/default.vcl:/etc/varnish/default.vcl:ro
+      - ./containers/varnish/default.vcl:/etc/varnish/default.vcl:ro
     ulimits:
       memlock:
         soft: -1
@@ -30,9 +30,9 @@ services:
   nginx:
     image: docker.io/library/nginx:alpine
     ports:
-      - "8002:80"
+      - "8080:80"
     volumes:
-      - ./_containers/nginx/nginx.conf:/etc/nginx/conf.d/default.conf:ro
+      - ./containers/nginx/nginx.conf:/etc/nginx/conf.d/default.conf:ro
     tmpfs:
       - /var/cache/nginx:size=8g
     depends_on:
@@ -42,10 +42,10 @@ services:
     image: docker.io/ubuntu/squid:latest
     command: [ "squid", "--foreground", "-f", "/etc/squid/squid.conf" ]
     ports:
-      - "8003:80"
+      - "8080:80"
     shm_size: 8g
     volumes:
-      - ./_containers/squid/squid.conf:/etc/squid/squid.conf:ro
+      - ./containers/squid/squid.conf:/etc/squid/squid.conf:ro
     tmpfs:
       - /var/spool/squid:rw,mode=1777,size=8g
     depends_on:
@@ -53,23 +53,23 @@ services:
 
   caddy-souin:
     build:
-      context: ./_containers/caddy-souin
+      context: ./containers/caddy-souin
       dockerfile: Containerfile
     ports:
-      - "8004:80"
+      - "8080:80"
     volumes:
-      - ./_containers/caddy-souin/Caddyfile:/etc/caddy/Caddyfile:ro
+      - ./containers/caddy-souin/Caddyfile:/etc/caddy/Caddyfile:ro
     depends_on:
       - mockorigin
 
   caddy-mak:
     build:
-      context: ./_containers/caddy-mak
+      context: ./containers/caddy-mak
       dockerfile: Containerfile
     ports:
-      - "8005:80"
+      - "8080:80"
     volumes:
-      - ./_containers/caddy-mak/Caddyfile:/etc/caddy/Caddyfile:ro
+      - ./containers/caddy-mak/Caddyfile:/etc/caddy/Caddyfile:ro
     depends_on:
       - mockorigin
 

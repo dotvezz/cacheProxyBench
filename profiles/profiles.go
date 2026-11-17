@@ -1,6 +1,7 @@
 package profiles
 
 import (
+	"fmt"
 	"sync"
 	"time"
 )
@@ -43,6 +44,7 @@ func (t *Track) PlannedRequestCount() (count int) {
 
 type Profile struct {
 	Name        string  `yaml:"name"`
+	TargetName  string  `yaml:"target_name"`
 	Description string  `yaml:"description,omitempty"`
 	AllowError  bool    `yaml:"allow_error,omitempty"`
 	Tracks      []Track `yaml:"tracks"`
@@ -64,4 +66,15 @@ func (p *Profile) PlannedRequestCount() int {
 
 func GetAll() []Profile {
 	return GetIncluded()
+}
+
+func GetTarget(name string) (Profile, error) {
+	all := GetAll()
+	for _, p := range all {
+		if p.TargetName == name {
+			return p, nil
+		}
+	}
+
+	return Profile{}, fmt.Errorf("target profile `%s` not found", name)
 }
