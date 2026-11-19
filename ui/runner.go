@@ -6,26 +6,15 @@ import (
 	"time"
 
 	tea "charm.land/bubbletea/v2"
+	"github.com/NimbleMarkets/ntcharts/v2/linechart/timeserieslinechart"
 	"github.com/dotvezz/cacheProxyBench/benchmark"
 	"github.com/dotvezz/cacheProxyBench/profiles"
 )
 
-type RunnerOption func(*Runner)
-
-func WithNext(fn func(profiles.Profile, *benchmark.Timeline) tea.Model) RunnerOption {
-	return func(r *Runner) {
-		r.next = fn
-	}
-}
-
-func NewRunner(profile profiles.Profile, opts ...RunnerOption) *Runner {
-	r := &Runner{
+func NewRunner(profile profiles.Profile) *runner {
+	return &runner{
 		profile: profile,
 	}
-	for _, opt := range opts {
-		opt(r)
-	}
-	return r
 }
 
 type tickMsg time.Time
@@ -44,40 +33,75 @@ func waitJobCmd(job *benchmark.Job) tea.Cmd {
 	}
 }
 
-type Runner struct {
+type runner struct {
 	profile  profiles.Profile
 	timeline benchmark.Timeline
-
-	job  *benchmark.Job
-	next func(profiles.Profile, *benchmark.Timeline) tea.Model
+	done     bool
+	job      *benchmark.Job
 }
 
-func (r *Runner) Init() tea.Cmd {
+func (r *runner) Init() tea.Cmd {
 	r.job = benchmark.Run(r.profile, &r.timeline)
 
 	return tea.Batch(tickCmd(), waitJobCmd(r.job))
 }
 
-func (r *Runner) Update(msg tea.Msg) (tea.Model, tea.Cmd) {
-	switch msg.(type) {
+func (r *runner) Update(msg tea.Msg) (tea.Model, tea.Cmd) {
+	switch msg := msg.(type) {
 	case tickMsg:
-		return r, tickCmd()
-	case jobDoneMsg:
-		if r.next != nil {
-			next := r.next(r.profile, &r.timeline)
-			return next, next.Init()
+		var cmd = tickCmd()
+		if r.done {
+			cmd = nil
 		}
-		return r, tea.Quit
+		return r, cmd
+	case jobDoneMsg:
+		r.done = true
+	case tea.KeyPressMsg:
+		switch msg.Code {
+		case 'q':
+			r.job.Cancel()
+			return r, tea.Quit
+		}
+
+		switch msg.String() {
+		case "ctrl+c":
+			r.job.Cancel()
+			return r, tea.Quit
+		}
 	}
 
 	return r, nil
 }
 
-func (r *Runner) View() tea.View {
+func (r *runner) chart(metric, aggType string) string {
+	tslc := timeserieslinechart.New(41, 10)
+	for i, v := range []float64{0, 4, 8, 10, 8, 4, 0, -4, -8, -10, -8, -4, 0} {
+		date := time.Now().Add(time.Hour * time.Duration(24*i))
+		tslc.Push(timeserieslinechart.TimePoint{date, v})
+	}
+
+	return tslc.View()
+}
+
+func (r *runner) View() tea.View {
 	var sb strings.Builder
 
-	sb.WriteString(fmt.Sprintf("Running: %s (target name %s)\n\n", r.profile.Name, r.profile.TargetName))
-	sb.WriteString(fmt.Sprintf("Finished: %d of %d requests)\n\n", r.timeline.Len(), r.profile.PlannedRequestCount()))
+	sb.WriteString(fmt.Sprintf("%s (target name %s)\n\n", r.profile.Name, r.profile.TargetName))
+
+	total := r.timeline.Len()
+
+	sb.WriteString(fmt.Sprintf("Requests:  %d / %d\n", total, r.profile.PlannedRequestCount()))
+	sb.WriteString(fmt.Sprintf("Misses:      %d\n", r.timeline.Misses()))
+	sb.WriteString(fmt.Sprintf("Hits:      %d\n", r.timeline.Hits()))
+	sb.WriteString(fmt.Sprintf("Collapsed: %d\n", r.timeline.Collapsed()))
+	sb.WriteString(fmt.Sprintf("Errors:    %d\n", r.timeline.Errors()))
+
+	if total > 0 {
+		sb.WriteString(fmt.Sprintf("\nTime To First Byte: %s\n", r.timeline.AvgFirstByte().Round(time.Millisecond)))
+		sb.WriteString(fmt.Sprintf("Avg Completed:  %s\n", r.timeline.AvgCompleted().Round(time.Millisecond)))
+	}
+
+	sb.WriteString(fmt.Sprintf("Finished %d of %d requests.\n\n", r.timeline.Len(), r.profile.PlannedRequestCount()))
 
 	return tea.NewView(sb.String())
 }

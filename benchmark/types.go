@@ -58,6 +58,11 @@ func (t *Timeline) Hits() int {
 	return t.count(func(r Result) bool { return r.Hit })
 }
 
+// Misses returns the number of cache-hit results in the timeline.
+func (t *Timeline) Misses() int {
+	return t.count(func(r Result) bool { return !r.Hit })
+}
+
 // Collapsed returns the number of collapsed results in the timeline.
 func (t *Timeline) Collapsed() int {
 	return t.count(func(r Result) bool { return r.Collapsed })
@@ -85,12 +90,14 @@ func (t *Timeline) avgDuration(extract func(Result) time.Duration) time.Duration
 
 // AvgFirstByte returns the average time to first byte across all results.
 func (t *Timeline) AvgFirstByte() time.Duration {
-	return t.avgDuration(func(r Result) time.Duration { return r.FirstByte })
+	return t.avgDuration(func(r Result) time.Duration {
+		return r.FirstByte - r.Sent
+	})
 }
 
 // AvgCompleted returns the average completion duration across all results.
 func (t *Timeline) AvgCompleted() time.Duration {
-	return t.avgDuration(func(r Result) time.Duration { return r.Completed })
+	return t.avgDuration(func(r Result) time.Duration { return r.Completed - r.Sent })
 }
 
 type Result struct {

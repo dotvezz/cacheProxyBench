@@ -1,4 +1,4 @@
-package ui
+package menu
 
 import (
 	"strings"
@@ -42,7 +42,8 @@ func (m *Menu) Update(msg tea.Msg) (tea.Model, tea.Cmd) {
 			}
 		case tea.KeyEnter:
 			if m.items != nil {
-				return m.items[m.cursor].Value(m), nil
+				m2 := m.items[m.cursor].Value(m)
+				return m2, m2.Init()
 			}
 		case 'q':
 			if m.parent == nil {
@@ -60,7 +61,8 @@ func (m *Menu) Update(msg tea.Msg) (tea.Model, tea.Cmd) {
 
 		for i := range m.items {
 			if m.items[i].HotKey == msg.Code {
-				return m.items[i].Value(m), nil
+				m2 := m.items[i].Value(m)
+				return m2, m2.Init()
 			}
 		}
 

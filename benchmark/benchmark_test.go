@@ -59,7 +59,10 @@ func TestRun(t *testing.T) {
 		t.Run(tt.name, func(t *testing.T) {
 			timeline := NewTimeline(tt.args.p.PlannedRequestCount())
 			Run(tt.args.p, timeline).Wait()
+
 			fmt.Println(timeline.Len())
+			fmt.Println(timeline.Misses())
+			fmt.Println(timeline.Hits())
 		})
 	}
 }

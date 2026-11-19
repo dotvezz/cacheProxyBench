@@ -1,0 +1,59 @@
+name: Default Benchmark
+target_name: default
+description: The default benchmark
+tracks:
+  - name: baseline
+    from: 0s
+    to: 20s
+    rps: 50
+    paths:
+      - /small_css
+  - name: image
+    from: 1s
+    to: 5s
+    rps: 5_000
+    paths:
+      - /image
+  - name: early binary spike
+    from: 1s
+    to: 2s
+    rps: 10_000
+    paths:
+      - /binary_1mb
+      - /binary_100kb
+  - name: bigger binary included
+    from: 1s
+    to: 2s
+    rps: 10_000
+    paths:
+      - /binary_1mb
+      - /binary_100kb
+      - /binary_1mb
+  - name: small spike
+    from: 5s
+    to: 6s
+    rps: 100
+    paths:
+      - /small_css
+      - /medium_css
+  - name: big spike
+    from: 6s
+    to: 7s
+    rps: 10_000
+    paths:
+      - /small_css
+      - /medium_css
+  - name: huge spike
+    from: 7s
+    to: 8s
+    rps: 100_000
+    paths:
+      - /small_css
+      - /medium_css
+  - name: big spike for large assets
+    from: 7s
+    to: 11s
+    rps: 10_000
+    paths:
+      - /large_css
+      - /large_json

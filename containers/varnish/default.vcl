@@ -22,11 +22,22 @@ sub vcl_backend_response {
     set beresp.grace = 1m;
     return (deliver);
 }
-
 sub vcl_deliver {
-    if (obj.hits > 0) {
-        set resp.http.X-Cache = "HIT";
+    if (req.method != "GET" && req.method != "HEAD") {
+        set resp.http.Cache-Status = "Varnish; fwd=method";
+    } else if (obj.uncacheable) {
+        set resp.http.Cache-Status = "Varnish; fwd=bypass";
+    } else if (resp.http.X-Fetched) {
+        # This thread performed the origin fetch (the coalescing leader)
+        unset resp.http.X-Fetched;
+        set resp.http.Cache-Status = "Varnish; fwd=uri-miss; stored";
+    } else if (obj.hits > 0 && req.restarts == 0 && resp.http.Age ~ "^[01]?$") {
+        # Served from cache with near-zero age without fetching itself (coalesced follower)
+        set resp.http.Cache-Status = "Varnish; hit; collapsed; ttl=" + obj.ttl;
+    } else if (obj.hits > 0) {
+        # Standard cache hit
+        set resp.http.Cache-Status = "Varnish; hit; ttl=" + obj.ttl;
     } else {
-        set resp.http.X-Cache = "MISS";
+        set resp.http.Cache-Status = "Varnish; fwd=uri-miss";
     }
 }
